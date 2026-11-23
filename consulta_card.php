@@ -20,9 +20,17 @@ if ($action === 'add' && $user->hasRight('optica', 'write')) {
 	$fk_soc = GETPOSTINT('fk_soc');
 	$fk_montura = GETPOSTINT('fk_montura');
 	$precio_montura = (float) GETPOST('precio_montura', 'alphanohtml');
+	$fk_cristal_product = GETPOSTINT('fk_cristal_product');
 	$tipo_cristal = GETPOST('tipo_cristal', 'alphanohtml');
 	$descripcion_cristal = GETPOST('descripcion_cristal', 'alphanohtml');
 	$precio_cristales = (float) GETPOST('precio_cristales', 'alphanohtml');
+	if ($fk_cristal_product > 0) {
+		$resSvc = $db->query("SELECT ref, label, price, price_ttc, tva_tx FROM ".MAIN_DB_PREFIX."product WHERE rowid = ".((int) $fk_cristal_product)." AND fk_product_type = 1");
+		if ($resSvc && ($svc = $db->fetch_object($resSvc))) {
+			$tipo_cristal = $svc->ref.' - '.$svc->label;
+			$precio_cristales = ((float) $svc->price_ttc > 0) ? (float) $svc->price_ttc : round((float) $svc->price * (1 + ((float) $svc->tva_tx / 100)), 2);
+		}
+	}
 	$abono_inicial = (float) GETPOST('abono_inicial', 'alphanohtml');
 	$abono_currency = GETPOST('abono_currency', 'aZ09') ?: ($conf->currency ?: 'USD');
 	$abono_tasa = (float) GETPOST('abono_tasa', 'alphanohtml');
@@ -36,13 +44,13 @@ if ($action === 'add' && $user->hasRight('optica', 'write')) {
 	$sql .= " od_esf, od_cil, od_eje, od_add, od_av, od_dnp,";
 	$sql .= " oi_esf, oi_cil, oi_eje, oi_add, oi_av, oi_dnp,";
 	$sql .= " dp, altura, observaciones, fk_montura, precio_montura,";
-	$sql .= " tipo_cristal, descripcion_cristal, precio_cristales, total, abono, saldo, estado, entregado, stock_descontado, fk_user_author, datec) VALUES (";
+	$sql .= " fk_cristal_product, tipo_cristal, descripcion_cristal, precio_cristales, total, abono, saldo, estado, entregado, stock_descontado, fk_user_author, datec) VALUES (";
 	$sql .= ((int) $conf->entity).", '".$db->escape($ref)."', ".((int) $fk_soc).", '".$db->idate(dol_now())."',";
 	$sql .= " '".$db->escape(GETPOST('od_esf', 'alphanohtml'))."', '".$db->escape(GETPOST('od_cil', 'alphanohtml'))."', '".$db->escape(GETPOST('od_eje', 'alphanohtml'))."', '".$db->escape(GETPOST('od_add', 'alphanohtml'))."', '".$db->escape(GETPOST('od_av', 'alphanohtml'))."', '".$db->escape(GETPOST('od_dnp', 'alphanohtml'))."',";
 	$sql .= " '".$db->escape(GETPOST('oi_esf', 'alphanohtml'))."', '".$db->escape(GETPOST('oi_cil', 'alphanohtml'))."', '".$db->escape(GETPOST('oi_eje', 'alphanohtml'))."', '".$db->escape(GETPOST('oi_add', 'alphanohtml'))."', '".$db->escape(GETPOST('oi_av', 'alphanohtml'))."', '".$db->escape(GETPOST('oi_dnp', 'alphanohtml'))."',";
 	$sql .= " '".$db->escape(GETPOST('dp', 'alphanohtml'))."', '".$db->escape(GETPOST('altura', 'alphanohtml'))."', '".$db->escape(GETPOST('observaciones', 'restricthtml'))."',";
 	$sql .= " ".($fk_montura > 0 ? (int) $fk_montura : "NULL").", ".((float) $precio_montura).",";
-	$sql .= " '".$db->escape($tipo_cristal)."', '".$db->escape($descripcion_cristal)."', ".((float) $precio_cristales).",";
+	$sql .= " ".($fk_cristal_product > 0 ? (int) $fk_cristal_product : "NULL").", '".$db->escape($tipo_cristal)."', '".$db->escape($descripcion_cristal)."', ".((float) $precio_cristales).",";
 	$sql .= " ".((float) $total).", 0, ".((float) $total).", 0, 0, 0, ".((int) $user->id).", '".$db->idate(dol_now())."')";
 
 	if ($db->query($sql)) {
@@ -64,20 +72,29 @@ if ($action === 'add' && $user->hasRight('optica', 'write')) {
 if ($action === 'update_montura' && $id > 0 && $user->hasRight('optica', 'write')) {
 	$fk_montura = GETPOSTINT('fk_montura');
 	$precio_montura = (float) GETPOST('precio_montura', 'alphanohtml');
+	$fk_cristal_product = GETPOSTINT('fk_cristal_product');
 	$tipo_cristal = GETPOST('tipo_cristal', 'alphanohtml');
 	$descripcion_cristal = GETPOST('descripcion_cristal', 'alphanohtml');
 	$precio_cristales = (float) GETPOST('precio_cristales', 'alphanohtml');
+	if ($fk_cristal_product > 0) {
+		$resSvc = $db->query("SELECT ref, label, price, price_ttc, tva_tx FROM ".MAIN_DB_PREFIX."product WHERE rowid = ".((int) $fk_cristal_product)." AND fk_product_type = 1");
+		if ($resSvc && ($svc = $db->fetch_object($resSvc))) {
+			$tipo_cristal = $svc->ref.' - '.$svc->label;
+			$precio_cristales = ((float) $svc->price_ttc > 0) ? (float) $svc->price_ttc : round((float) $svc->price * (1 + ((float) $svc->tva_tx / 100)), 2);
+		}
+	}
 
 	$total = $precio_montura + $precio_cristales;
 	$sqlUpdM = "UPDATE ".MAIN_DB_PREFIX."optica_consulta SET ";
 	$sqlUpdM .= "fk_montura = ".($fk_montura > 0 ? (int) $fk_montura : "NULL").", ";
 	$sqlUpdM .= "precio_montura = ".((float) $precio_montura).", ";
+	$sqlUpdM .= "fk_cristal_product = ".($fk_cristal_product > 0 ? (int) $fk_cristal_product : "NULL").", ";
 	$sqlUpdM .= "tipo_cristal = '".$db->escape($tipo_cristal)."', ";
 	$sqlUpdM .= "descripcion_cristal = '".$db->escape($descripcion_cristal)."', ";
 	$sqlUpdM .= "precio_cristales = ".((float) $precio_cristales).", ";
 	$sqlUpdM .= "total = ".((float) $total).", ";
 	$sqlUpdM .= "saldo = GREATEST(0, ".((float) $total)." - abono) ";
-	$sqlUpdM .= "WHERE rowid = ".((int) $id)." AND estado < 3";
+	$sqlUpdM .= "WHERE rowid = ".((int) $id)." AND fk_facture IS NULL";
 	if ($db->query($sqlUpdM)) {
 		setEventMessages('Montura y cristales actualizados.', null, 'mesgs');
 	} else {
@@ -243,11 +260,23 @@ if ($action === 'create') {
 	}
 	$monedas = optica_get_active_currencies($db);
 	$baseCur = $conf->currency ?: 'USD';
+	$serviciosCristal = optica_get_servicios_cristales($db);
 
-	print '<tr><td>Precio Montura ($ IVA 16% incl.)</td><td><input type="number" step="0.01" name="precio_montura" id="precio_montura" value="0.00"></td></tr>';
-	print '<tr><td>Tipo de Cristal (Sin Stock)</td><td><input type="text" name="tipo_cristal" class="minwidth300" placeholder="Ej. Monofocal Antirreflejo Blue Block"></td></tr>';
-	print '<tr><td>Detalle / Laboratorio Cristal</td><td><input type="text" name="descripcion_cristal" class="minwidth400" placeholder="Ej. Policarbonato 1.59, filtro UV"></td></tr>';
-	print '<tr><td>Precio Cristales ($ IVA 16% incl.)</td><td><input type="number" step="0.01" name="precio_cristales" value="0.00"></td></tr>';
+	print '<tr><td>Precio Montura ($ IVA 16% incl.)</td><td><input type="number" step="0.01" name="precio_montura" id="precio_montura" value="0.00" readonly></td></tr>';
+	print '<tr><td>Servicio de Cristal (Sin Stock)</td><td><select name="fk_cristal_product" id="fk_cristal_product" class="minwidth300" onchange="var opt=this.options[this.selectedIndex]; var p=opt.getAttribute(\'data-precio\'); var t=opt.getAttribute(\'data-label\'); document.getElementById(\'precio_cristales\').value=p||\'0.00\'; document.getElementById(\'tipo_cristal\').value=t||\'\';">';
+	print '<option value="0" data-precio="0.00" data-label="">-- Sin cristales / Solo montura --</option>';
+	foreach ($serviciosCristal as $sv) {
+		$lbl = $sv->ref.' - '.$sv->label;
+		print '<option value="'.$sv->rowid.'" data-precio="'.number_format((float) $sv->precio_final, 2, '.', '').'" data-label="'.dol_escape_htmltag($lbl).'">'.dol_escape_htmltag($lbl).' ($'.number_format((float) $sv->precio_final, 2).' IVA incl.)</option>';
+	}
+	print '</select>';
+	if (count($serviciosCristal) == 0) {
+		print ' <small><a href="'.dol_buildpath('/optica/cristales.php', 1).'">Cargar catálogo de cristales</a></small>';
+	}
+	print '<input type="hidden" name="tipo_cristal" id="tipo_cristal" value="">';
+	print '</td></tr>';
+	print '<tr><td>Detalle / Laboratorio Cristal</td><td><input type="text" name="descripcion_cristal" class="minwidth400" placeholder="Opcional: indicaciones especiales para taller"></td></tr>';
+	print '<tr><td>Precio Cristales ($ IVA 16% incl.)</td><td><input type="number" step="0.01" name="precio_cristales" id="precio_cristales" value="0.00" readonly></td></tr>';
 	print '<tr><td><strong>Abono Inicial en Consulta</strong></td><td>';
 	print 'Monto: <input type="number" step="0.01" name="abono_inicial" value="0.00" style="width:90px;"> ';
 	print 'Moneda: <select name="abono_currency" onchange="var r=this.options[this.selectedIndex].getAttribute(\'data-rate\'); if(r) document.getElementById(\'create_tasa\').value=r;">';
@@ -350,12 +379,13 @@ if ($action === 'create') {
 	}
 	print '</h3>';
 
-	if ($action === 'edit_montura' && (int) $c->estado < 3 && $user->hasRight('optica', 'write')) {
+	if ($action === 'edit_montura' && (int) $c->fk_facture === 0 && $user->hasRight('optica', 'write')) {
 		$monturas = array();
 		$resMon = $db->query("SELECT rowid, ref, label, clase, precio, stock FROM ".MAIN_DB_PREFIX."optica_montura WHERE entity = ".((int) $conf->entity)." AND active = 1 ORDER BY clase ASC, ref ASC");
 		if ($resMon) {
 			while ($m = $db->fetch_object($resMon)) $monturas[] = $m;
 		}
+		$serviciosCristal = optica_get_servicios_cristales($db);
 		print '<form method="POST" action="'.$_SERVER['PHP_SELF'].'?id='.$id.'">';
 		print '<input type="hidden" name="token" value="'.newToken().'">';
 		print '<input type="hidden" name="action" value="update_montura">';
@@ -368,17 +398,25 @@ if ($action === 'create') {
 			print '<option value="'.$m->rowid.'" data-precio="'.number_format((float) $m->precio, 2, '.', '').'"'.$sel.$disabled.'>'.dol_escape_htmltag($m->ref.' - '.$m->label).' | Clase '.$m->clase.' ($'.number_format((float) $m->precio, 2).') | Stock: '.$m->stock.'</option>';
 		}
 		print '</select></td></tr>';
-		print '<tr><td>Precio Montura ($)</td><td><input type="number" step="0.01" name="precio_montura" id="edit_precio_montura" value="'.number_format((float) $c->precio_montura, 2, '.', '').'"></td></tr>';
-		print '<tr><td>Tipo de Cristal (Sin Stock)</td><td><input type="text" name="tipo_cristal" class="minwidth300" value="'.dol_escape_htmltag($c->tipo_cristal).'"></td></tr>';
+		print '<tr><td>Precio Montura ($ IVA 16% incl.)</td><td><input type="number" step="0.01" name="precio_montura" id="edit_precio_montura" value="'.number_format((float) $c->precio_montura, 2, '.', '').'" readonly></td></tr>';
+		print '<tr><td>Servicio de Cristal (Sin Stock)</td><td><select name="fk_cristal_product" class="minwidth300" onchange="var opt=this.options[this.selectedIndex]; document.getElementById(\'edit_precio_cristales\').value=opt.getAttribute(\'data-precio\')||\'0.00\'; document.getElementById(\'edit_tipo_cristal\').value=opt.getAttribute(\'data-label\')||\'\';">';
+		print '<option value="0" data-precio="0.00" data-label="">-- Sin cristales / Solo montura --</option>';
+		foreach ($serviciosCristal as $sv) {
+			$lbl = $sv->ref.' - '.$sv->label;
+			$sel = ((int) $c->fk_cristal_product === (int) $sv->rowid) ? ' selected' : '';
+			print '<option value="'.$sv->rowid.'" data-precio="'.number_format((float) $sv->precio_final, 2, '.', '').'" data-label="'.dol_escape_htmltag($lbl).'"'.$sel.'>'.dol_escape_htmltag($lbl).' ($'.number_format((float) $sv->precio_final, 2).' IVA incl.)</option>';
+		}
+		print '</select><input type="hidden" name="tipo_cristal" id="edit_tipo_cristal" value="'.dol_escape_htmltag($c->tipo_cristal).'"></td></tr>';
 		print '<tr><td>Detalle Cristal</td><td><input type="text" name="descripcion_cristal" class="minwidth400" value="'.dol_escape_htmltag($c->descripcion_cristal).'"></td></tr>';
-		print '<tr><td>Precio Cristales ($)</td><td><input type="number" step="0.01" name="precio_cristales" value="'.number_format((float) $c->precio_cristales, 2, '.', '').'"></td></tr>';
+		print '<tr><td>Precio Cristales ($ IVA 16% incl.)</td><td><input type="number" step="0.01" name="precio_cristales" id="edit_precio_cristales" value="'.number_format((float) $c->precio_cristales, 2, '.', '').'" readonly></td></tr>';
 		print '</table>';
 		print '<p><input type="submit" class="button" value="Guardar Montura y Cristales"> <a class="button button-cancel" href="'.$_SERVER['PHP_SELF'].'?id='.$id.'">Cancelar</a></p>';
 		print '</form><br>';
 	} else {
 		print '<table class="border centpercent">';
 		print '<tr><td class="titlefield">Montura</td><td>'.($c->montura_ref ? dol_escape_htmltag($c->montura_ref.' - '.$c->montura_label.' (Clase '.$c->montura_clase.') | Stock actual: '.$c->montura_stock) : 'Sin montura').' ($'.number_format((float) $c->precio_montura, 2).')</td></tr>';
-		print '<tr><td>Cristales (Sin Stock)</td><td>'.dol_escape_htmltag($c->tipo_cristal ?: '-').' '.dol_escape_htmltag($c->descripcion_cristal ? '('.$c->descripcion_cristal.')' : '').' ($'.number_format((float) $c->precio_cristales, 2).')</td></tr>';
+		$cristalLink = !empty($c->fk_cristal_product) ? ' <small>(<a href="'.DOL_URL_ROOT.'/product/card.php?id='.$c->fk_cristal_product.'">Servicio</a>)</small>' : '';
+		print '<tr><td>Cristales (Sin Stock)</td><td>'.dol_escape_htmltag($c->tipo_cristal ?: '-').$cristalLink.' '.dol_escape_htmltag($c->descripcion_cristal ? '('.$c->descripcion_cristal.')' : '').' ($'.number_format((float) $c->precio_cristales, 2).')</td></tr>';
 		print '<tr><td><strong>Total</strong></td><td><strong>$'.number_format((float) $c->total, 2).'</strong></td></tr>';
 		print '<tr><td>Abonado</td><td>$'.number_format((float) $c->abono, 2).'</td></tr>';
 		print '<tr><td><strong>Saldo Pendiente</strong></td><td><strong>$'.number_format((float) $c->saldo, 2).'</strong></td></tr>';

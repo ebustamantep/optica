@@ -34,7 +34,7 @@ class modOptica extends DolibarrModules
 		$this->descriptionlong = "OpticaDescriptionLong";
 		$this->editor_name = 'Optica';
 		$this->editor_url = '';
-		$this->version = '1.0.0';
+		$this->version = '1.1.0';
 		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
 		$this->picto = 'fa-eye';
 
@@ -181,6 +181,21 @@ class modOptica extends DolibarrModules
 			'mainmenu' => 'optica',
 			'leftmenu' => 'optica_monturas',
 			'url' => '/optica/monturas.php',
+			'langs' => 'optica@optica',
+			'position' => 1000 + $r,
+			'enabled' => 'isModEnabled("optica")',
+			'perms' => '$user->hasRight("optica", "read")',
+			'target' => '',
+			'user' => 2,
+		);
+
+		$this->menu[$r++] = array(
+			'fk_menu' => 'fk_mainmenu=optica',
+			'type' => 'left',
+			'titre' => 'OpticaCristales',
+			'mainmenu' => 'optica',
+			'leftmenu' => 'optica_cristales',
+			'url' => '/optica/cristales.php',
 			'langs' => 'optica@optica',
 			'position' => 1000 + $r,
 			'enabled' => 'isModEnabled("optica")',

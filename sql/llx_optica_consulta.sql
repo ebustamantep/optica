@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS llx_optica_consulta (
     -- Montura (con stock)
     fk_montura INTEGER NULL,
     precio_montura DOUBLE(24,8) NOT NULL DEFAULT 0,
-    -- Cristales (sin stock, fabricacion bajo pedido)
+    -- Cristales (servicio en Dolibarr sin stock, fabricacion bajo pedido)
+    fk_cristal_product INTEGER NULL,
     tipo_cristal VARCHAR(128) NULL,
     descripcion_cristal TEXT NULL,
     precio_cristales DOUBLE(24,8) NOT NULL DEFAULT 0,

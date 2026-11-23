@@ -37,6 +37,7 @@ function optica_ensure_schema($db)
 	$done = true;
 
 	$db->query("ALTER TABLE ".MAIN_DB_PREFIX."optica_montura ADD COLUMN fk_product INTEGER NULL AFTER stock");
+	$db->query("ALTER TABLE ".MAIN_DB_PREFIX."optica_consulta ADD COLUMN fk_cristal_product INTEGER NULL AFTER precio_montura");
 	$db->query("ALTER TABLE ".MAIN_DB_PREFIX."optica_consulta ADD COLUMN entregado TINYINT(1) NOT NULL DEFAULT 0 AFTER estado");
 	$db->query("ALTER TABLE ".MAIN_DB_PREFIX."optica_consulta ADD COLUMN stock_descontado TINYINT(1) NOT NULL DEFAULT 0 AFTER entregado");
 	$db->query("ALTER TABLE ".MAIN_DB_PREFIX."optica_abono ADD COLUMN currency_code VARCHAR(8) NULL DEFAULT 'USD' AFTER monto");
@@ -296,13 +297,13 @@ function optica_facturar_consulta($db, $user, $consulta_id)
 			$descMontura = 'Montura '.$c->montura_ref.' - '.$c->montura_label.' (Clase '.$c->montura_clase.')';
 			$fac->addline($descMontura, 0, 1, 16, 0, 0, (int) $c->montura_fk_product, 0, '', '', 0, 0, '', 'TTC', (float) $c->precio_montura, 0);
 		}
-		// Cristales con IVA 16% incluido (TTC)
-		if ((float) $c->precio_cristales > 0 || !empty($c->tipo_cristal)) {
-			$descCristal = 'Cristales bajo pedido: '.($c->tipo_cristal ?: 'Ópticos');
+		// Cristales con IVA 16% incluido (TTC) vinculados al Servicio real de Dolibarr
+		if ((float) $c->precio_cristales > 0 || !empty($c->tipo_cristal) || !empty($c->fk_cristal_product)) {
+			$descCristal = $c->tipo_cristal ?: 'Cristales Ópticos';
 			if (!empty($c->descripcion_cristal)) {
 				$descCristal .= ' - '.$c->descripcion_cristal;
 			}
-			$fac->addline($descCristal, 0, 1, 16, 0, 0, 0, 0, '', '', 0, 0, '', 'TTC', (float) $c->precio_cristales, 1);
+			$fac->addline($descCristal, 0, 1, 16, 0, 0, (int) $c->fk_cristal_product, 0, '', '', 0, 0, '', 'TTC', (float) $c->precio_cristales, 1);
 		}
 
 		$fac->validate($user);
@@ -448,4 +449,102 @@ function optica_registrar_abono($db, $user, $consulta_id, $monto_moneda, $curren
 	}
 
 	return array('ok' => true, 'abono_id' => $new_abono_id, 'fk_facture' => $fk_facture, 'saldo' => $nuevo_saldo, 'error' => '');
+}
+
+/**
+ * Catálogo estándar de servicios de cristales (IVA 16% incluido, sin stock)
+ */
+function optica_get_cristales_catalogo()
+{
+	return array(
+		array('ref' => 'BFANTRT',   'label' => 'BF Antirreflejo Terminados',              'precio' => 55.00),
+		array('ref' => 'BFBARECIL', 'label' => 'BF Blanco AR + Esfera+ Cilindro',          'precio' => 70.00),
+		array('ref' => 'BFBBT',     'label' => 'BF Blue Block Terminados',                 'precio' => 55.00),
+		array('ref' => 'BFBECIL',   'label' => 'BF Blanco Esfera con Cilindro',            'precio' => 60.00),
+		array('ref' => 'BFCR39',    'label' => 'BF CR39 Blanco',                           'precio' => 45.00),
+		array('ref' => 'BFFCRT',    'label' => 'BF FotoCromático Terminado',               'precio' => 75.00),
+		array('ref' => 'BFFTESFC',  'label' => 'BF Foto +AR + Esfera + Cilindro',          'precio' => 80.00),
+		array('ref' => 'MFAR',      'label' => 'MF Antirreflejos',                         'precio' => 70.00),
+		array('ref' => 'MFAREC',    'label' => 'MF Antirreflejos + Esfera + Cilindro',     'precio' => 95.00),
+		array('ref' => 'MFBB',      'label' => 'MF Blue Block',                            'precio' => 70.00),
+		array('ref' => 'MFBBEC',    'label' => 'MF blue Block + Esfera + Cilindro',        'precio' => 95.00),
+		array('ref' => 'MFBECT',    'label' => 'MF Blanco + Esfera + Cilindro',            'precio' => 90.00),
+		array('ref' => 'MFBL',      'label' => 'MF Blanco',                                'precio' => 60.00),
+		array('ref' => 'MFFC',      'label' => 'MF Fotocromatico',                         'precio' => 125.00),
+		array('ref' => 'MFFCEC',    'label' => 'MF Fotocromatico + Esfera + Cilindro',     'precio' => 135.00),
+		array('ref' => 'VSANREL',   'label' => 'VS AntiReflejos Terminados',               'precio' => 45.00),
+		array('ref' => 'VSBBLOT',   'label' => 'VS Blue Block Terminados',                 'precio' => 45.00),
+		array('ref' => 'VSBLEBTA',  'label' => 'VS Blue Block Tallados',                   'precio' => 65.00),
+		array('ref' => 'VSCR39L',   'label' => 'VS CR39 Blanco Tallado',                   'precio' => 50.00),
+	);
+}
+
+/**
+ * Crea o retorna un Servicio de Cristal en Dolibarr (llx_product con fk_product_type = 1, IVA 16% incluido, sin stock)
+ */
+function optica_sync_cristal_service($db, $user, $ref, $label, $precio_ttc)
+{
+	if (!file_exists(DOL_DOCUMENT_ROOT.'/product/class/product.class.php')) {
+		return 0;
+	}
+	require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+
+	$prod = new Product($db);
+	if ($prod->fetch(0, $ref) > 0) {
+		return (int) $prod->id;
+	}
+
+	$prod->ref = $ref;
+	$prod->label = $label;
+	$prod->description = 'Cristal óptico bajo pedido (sin stock)';
+	$prod->type = Product::TYPE_SERVICE; // 1 = Servicio (sin stock)
+	$prod->tva_tx = 16;
+	$prod->price_base_type = 'TTC';
+	$prod->price_ttc = (float) $precio_ttc;
+	$prod->price = round((float) $precio_ttc / 1.16, 8);
+	$prod->status = 1;     // En venta
+	$prod->status_buy = 1; // En compra
+
+	$pid = $prod->create($user);
+	return ($pid > 0) ? (int) $pid : 0;
+}
+
+/**
+ * Sincroniza todo el catálogo predefinido de cristales como Servicios en Dolibarr
+ */
+function optica_seed_cristales_services($db, $user)
+{
+	$creados = 0;
+	foreach (optica_get_cristales_catalogo() as $c) {
+		if (!file_exists(DOL_DOCUMENT_ROOT.'/product/class/product.class.php')) break;
+		require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
+		$prod = new Product($db);
+		if ($prod->fetch(0, $c['ref']) <= 0) {
+			if (optica_sync_cristal_service($db, $user, $c['ref'], $c['label'], $c['precio']) > 0) {
+				$creados++;
+			}
+		}
+	}
+	return $creados;
+}
+
+/**
+ * Obtiene todos los Servicios activos (fk_product_type = 1, tosell = 1) de Dolibarr para seleccionar cristales
+ */
+function optica_get_servicios_cristales($db)
+{
+	global $conf;
+	$list = array();
+	$sql = "SELECT rowid, ref, label, price, price_ttc, tva_tx FROM ".MAIN_DB_PREFIX."product";
+	$sql .= " WHERE entity IN (".getEntity('product').") AND fk_product_type = 1 AND tosell = 1";
+	$sql .= " ORDER BY ref ASC, label ASC";
+	$res = $db->query($sql);
+	if ($res) {
+		while ($obj = $db->fetch_object($res)) {
+			$precio = ((float) $obj->price_ttc > 0) ? (float) $obj->price_ttc : round((float) $obj->price * (1 + ((float) $obj->tva_tx / 100)), 2);
+			$obj->precio_final = $precio;
+			$list[] = $obj;
+		}
+	}
+	return $list;
 }

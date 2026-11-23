@@ -41,6 +41,7 @@ print '</div>';
 print '<div class="tabsAction">';
 print '<a class="butAction" href="'.dol_buildpath('/optica/consulta_card.php?action=create', 1).'">+ Nueva Consulta</a>';
 print '<a class="butAction" href="'.dol_buildpath('/optica/monturas.php', 1).'">Gestionar Monturas</a>';
+print '<a class="butAction" href="'.dol_buildpath('/optica/cristales.php', 1).'">Cristales (Servicios)</a>';
 print '<a class="butAction" href="'.dol_buildpath('/optica/clientes.php', 1).'">Clientes Ópticos</a>';
 print '<a class="butAction" href="'.dol_buildpath('/optica/reporte_caja.php', 1).'">Reporte de Caja</a>';
 print '<a class="butAction" href="'.dol_buildpath('/optica/simulacion.php', 1).'">Simulación / Datos Demo</a>';
