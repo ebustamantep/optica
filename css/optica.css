@@ -1,0 +1,44 @@
+.optica-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+.optica-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 14px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.optica-card .optica-card-title {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 6px;
+}
+.optica-card .optica-card-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+.optica-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.optica-badge-0 { background: #fff3cd; color: #856404; }
+.optica-badge-1 { background: #cce5ff; color: #004085; }
+.optica-badge-2 { background: #d1ecf1; color: #0c5460; }
+.optica-badge-3 { background: #d4edda; color: #155724; }
+.optica-rx-table th, .optica-rx-table td {
+    text-align: center;
+    padding: 6px 8px;
+}
+.optica-rx-table input[type="text"] {
+    width: 75px;
+    text-align: center;
+}

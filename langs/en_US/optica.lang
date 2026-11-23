@@ -1,0 +1,10 @@
+OpticaMenu=Optics
+OpticaDescription=Optics management: customers with optical prescriptions, consultations, partial payments, frame stock and invoicing on delivery.
+OpticaDescriptionLong=Module for managing optical customers and prescriptions (OD/OS), consultations with partial payments, frame inventory by class (A $60, B $50, C $40, D $30), made-to-order lenses without stock, and automatic invoicing upon frame delivery.
+OpticaDashboard=Optics Dashboard
+OpticaConsultas=Consultations & Orders
+OpticaNuevaConsulta=New Consultation
+OpticaClientes=Optical Customers
+OpticaMonturas=Frames (Stock)
+OpticaReporteCaja=Cash Report
+OpticaSimulacion=Simulation / Demo Data

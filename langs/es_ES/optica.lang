@@ -1,0 +1,10 @@
+OpticaMenu=Óptica
+OpticaDescription=Gestión integral de Óptica: clientes con datos ópticos, consultas, abonos, monturas con stock y facturación al entregar.
+OpticaDescriptionLong=Módulo para el control de clientes y sus fórmulas ópticas (OD/OI), gestión de consultas con abonos parciales, inventario de monturas por clase (A $60, B $50, C $40, D $30), cristales bajo pedido sin stock y generación automática de factura al entregar la montura.
+OpticaDashboard=Resumen Óptica
+OpticaConsultas=Consultas y Órdenes
+OpticaNuevaConsulta=Nueva Consulta
+OpticaClientes=Clientes Ópticos
+OpticaMonturas=Monturas (Stock)
+OpticaReporteCaja=Reporte de Caja
+OpticaSimulacion=Simulación / Datos Demo
