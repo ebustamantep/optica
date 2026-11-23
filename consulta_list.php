@@ -13,6 +13,8 @@ if (!$user->hasRight('optica', 'read')) accessforbidden();
 
 $search_ref = GETPOST('search_ref', 'alphanohtml');
 $search_estado = GETPOST('search_estado', 'intcomma');
+$search_date_start = GETPOST('search_date_start', 'alphanohtml');
+$search_date_end = GETPOST('search_date_end', 'alphanohtml');
 
 llxHeader('', 'Óptica - Consultas y Órdenes');
 print load_fiche_titre('Consultas y Órdenes Ópticas', '', 'fa-file-medical');
@@ -32,7 +34,10 @@ foreach ($estados as $k => $v) {
 	print '<option value="'.$k.'"'.$sel.'>'.$v.'</option>';
 }
 print '</select> ';
-print '<input type="submit" class="button" value="Filtrar">';
+print 'Desde: <input type="date" name="search_date_start" value="'.dol_escape_htmltag($search_date_start).'"> ';
+print 'Hasta: <input type="date" name="search_date_end" value="'.dol_escape_htmltag($search_date_end).'"> ';
+print '<input type="submit" class="button" value="Filtrar"> ';
+print '<a class="button button-cancel" href="'.$_SERVER['PHP_SELF'].'">Limpiar</a>';
 print '</form>';
 
 $sql = "SELECT c.*, s.nom as cliente, m.ref as montura_ref, m.clase as montura_clase";
@@ -45,6 +50,12 @@ if (!empty($search_ref)) {
 }
 if ($search_estado !== '') {
 	$sql .= " AND c.estado = ".((int) $search_estado);
+}
+if (!empty($search_date_start) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $search_date_start)) {
+	$sql .= " AND DATE(c.fecha_consulta) >= '".$db->escape($search_date_start)."'";
+}
+if (!empty($search_date_end) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $search_date_end)) {
+	$sql .= " AND DATE(c.fecha_consulta) <= '".$db->escape($search_date_end)."'";
 }
 $sql .= " ORDER BY c.rowid DESC";
 
