@@ -39,7 +39,7 @@ foreach ($cuentas as $b) {
 }
 print '</select> ';
 print '<input type="submit" class="button" value="Consultar"> ';
-print '<a class="butAction" href="'.$corteZUrl.'" onclick="return opticaPrintPopup(this.href, \'Corte Z - Cierre de Caja\');">Imprimir Corte Z (Popup)</a>';
+print '<a class="butAction optica-popup-link" title="Corte Z - Cierre de Caja" href="'.$corteZUrl.'" onclick="return opticaPrintPopup(this.href, \'Corte Z - Cierre de Caja\');">Imprimir Corte Z (Popup)</a>';
 print '</form>';
 
 $sql = "SELECT a.*, c.ref as consulta_ref, s.nom as cliente, ba.label as bank_label, ba.currency_code as bank_cur, b.amount as bank_amount";
@@ -151,7 +151,7 @@ if (count($rows) > 0) {
 		$depTxt = ($r->bank_amount !== null) ? number_format((float) $r->bank_amount, 2).' '.dol_escape_htmltag($bCur) : '-';
 		print '<tr class="oddeven">';
 		print '<td>'.dol_print_date($db->jdate($r->fecha_pago), 'dayhour').'</td>';
-		print '<td><a href="'.dol_buildpath('/optica/abono_ticket.php?id='.$r->rowid, 1).'" onclick="return opticaPrintPopup(this.href, \'Ticket de Abono\');">#'.str_pad((string) $r->rowid, 6, '0', STR_PAD_LEFT).'</a></td>';
+		print '<td><a class="optica-popup-link" title="Ticket de Abono" href="'.dol_buildpath('/optica/abono_ticket.php?id='.$r->rowid, 1).'" onclick="return opticaPrintPopup(this.href, \'Ticket de Abono\');">#'.str_pad((string) $r->rowid, 6, '0', STR_PAD_LEFT).'</a></td>';
 		print '<td><a href="'.dol_buildpath('/optica/consulta_card.php?id='.$r->fk_consulta, 1).'"><strong>'.dol_escape_htmltag($r->consulta_ref).'</strong></a></td>';
 		print '<td>'.dol_escape_htmltag($r->cliente ?: 'N/A').'</td>';
 		print '<td>'.dol_escape_htmltag($r->metodo_pago).'</td>';

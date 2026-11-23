@@ -58,7 +58,7 @@ if ($action === 'add' && $user->hasRight('optica', 'write')) {
 		if ($abono_inicial > 0) {
 			$resAb = optica_registrar_abono($db, $user, $newid, $abono_inicial, $abono_currency, $abono_tasa, $abono_metodo, $abono_bank_account, 'Abono inicial en consulta');
 			if ($resAb['ok'] && $resAb['abono_id'] > 0) {
-				setEventMessages('Consulta creada y abono registrado. <a href="'.dol_buildpath('/optica/abono_ticket.php?id='.$resAb['abono_id'], 1).'" onclick="return opticaPrintPopup(this.href, \'Ticket de Abono\');"><strong>Imprimir Ticket Abono</strong></a>', null, 'mesgs');
+				setEventMessages('Consulta creada y abono registrado. <a class="optica-popup-link" title="Ticket de Abono" href="'.dol_buildpath('/optica/abono_ticket.php?id='.$resAb['abono_id'], 1).'"><strong>Imprimir Ticket Abono</strong></a>', null, 'mesgs');
 			}
 		}
 		header("Location: ".$_SERVER['PHP_SELF']."?id=".$newid);
@@ -143,9 +143,9 @@ if ($action === 'add_abono' && $id > 0 && $user->hasRight('optica', 'write')) {
 
 	$resAb = optica_registrar_abono($db, $user, $id, $monto_moneda, $currency_code, $tasa, $metodo, $fk_bank_account, $nota);
 	if ($resAb['ok']) {
-		$msg = 'Abono registrado. <a href="'.dol_buildpath('/optica/abono_ticket.php?id='.$resAb['abono_id'], 1).'" onclick="return opticaPrintPopup(this.href, \'Ticket de Abono\');"><strong>Imprimir Ticket Abono</strong></a>';
+		$msg = 'Abono registrado. <a class="optica-popup-link" title="Ticket de Abono" href="'.dol_buildpath('/optica/abono_ticket.php?id='.$resAb['abono_id'], 1).'"><strong>Imprimir Ticket Abono</strong></a>';
 		if ((float) $resAb['saldo'] <= 0.01 && (int) $resAb['fk_facture'] > 0) {
-			$msg .= ' | Pago completo: Factura #'.$resAb['fk_facture'].' generada y pagada. <a href="'.dol_buildpath('/optica/factura_ticket.php?id='.$id, 1).'" onclick="return opticaPrintPopup(this.href, \'Factura Ticket\');"><strong>Imprimir Factura Ticket</strong></a>';
+			$msg .= ' | Pago completo: Factura #'.$resAb['fk_facture'].' generada y pagada. <a class="optica-popup-link" title="Factura Ticket" href="'.dol_buildpath('/optica/factura_ticket.php?id='.$id, 1).'"><strong>Imprimir Factura Ticket</strong></a>';
 		}
 		setEventMessages($msg, null, 'mesgs');
 	} else {
@@ -327,12 +327,12 @@ if ($action === 'create') {
 	print '<tr><td>Fecha Consulta</td><td>'.dol_print_date($db->jdate($c->fecha_consulta), 'dayhour').'</td></tr>';
 	print '<tr><td>Estado</td><td><span class="optica-badge optica-badge-'.((int) $c->estado).'">'.($estados[(int) $c->estado] ?? '').'</span></td></tr>';
 	if ($c->fk_facture) {
-		print '<tr><td>Factura Generada</td><td><a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$c->fk_facture.'">Ver Factura #'.$c->fk_facture.'</a> <a class="butAction" href="'.dol_buildpath('/optica/factura_ticket.php?id='.$id, 1).'" onclick="return opticaPrintPopup(this.href, \'Factura Ticket\');">Imprimir Factura Ticket</a></td></tr>';
+		print '<tr><td>Factura Generada</td><td><a class="butAction" href="'.DOL_URL_ROOT.'/compta/facture/card.php?facid='.$c->fk_facture.'">Ver Factura #'.$c->fk_facture.'</a> <a class="butAction optica-popup-link" title="Factura Ticket" href="'.dol_buildpath('/optica/factura_ticket.php?id='.$id, 1).'" onclick="return opticaPrintPopup(this.href, \'Factura Ticket\');">Imprimir Factura Ticket</a></td></tr>';
 	}
 	print '</table><br>';
 
 	print '<h3>Datos Ópticos ';
-	print '<a class="button small" href="'.dol_buildpath('/optica/rx_ticket.php?id='.$id, 1).'" onclick="return opticaPrintPopup(this.href, \'Ticket Datos Ópticos\');">Imprimir Ticket Datos Ópticos</a> ';
+	print '<a class="button small optica-popup-link" title="Ticket Datos Ópticos" href="'.dol_buildpath('/optica/rx_ticket.php?id='.$id, 1).'" onclick="return opticaPrintPopup(this.href, \'Ticket Datos Ópticos\');">Imprimir Ticket Datos Ópticos</a> ';
 	if ($user->hasRight('optica', 'write') && $action !== 'edit_rx') {
 		print '<a class="button small" href="'.$_SERVER['PHP_SELF'].'?id='.$id.'&action=edit_rx&token='.newToken().'">Editar Datos Ópticos</a>';
 	}
@@ -476,7 +476,7 @@ if ($action === 'create') {
 			$monedaTxt = !empty($ab->currency_code) ? $ab->currency_code.' ('.number_format((float) $ab->monto_moneda, 2).')' : 'USD';
 			$cuentaTxt = dol_escape_htmltag($ab->metodo_pago).(!empty($ab->bank_label) ? ' / '.dol_escape_htmltag($ab->bank_label) : '');
 			print '<tr class="oddeven"><td>'.dol_print_date($db->jdate($ab->fecha_pago), 'dayhour').'</td><td>'.$cuentaTxt.'</td><td>'.dol_escape_htmltag($monedaTxt).'</td><td>'.dol_escape_htmltag($ab->nota).'</td><td class="right">$'.number_format((float) $ab->monto, 2).'</td>';
-			print '<td class="center"><a class="button small" href="'.dol_buildpath('/optica/abono_ticket.php?id='.$ab->rowid, 1).'" onclick="return opticaPrintPopup(this.href, \'Ticket de Abono\');">Imprimir Ticket</a></td></tr>';
+			print '<td class="center"><a class="button small optica-popup-link" title="Ticket de Abono" href="'.dol_buildpath('/optica/abono_ticket.php?id='.$ab->rowid, 1).'" onclick="return opticaPrintPopup(this.href, \'Ticket de Abono\');">Imprimir Ticket</a></td></tr>';
 		}
 	} else {
 		print '<tr><td colspan="6" class="opacitymedium center">Sin abonos registrados.</td></tr>';
